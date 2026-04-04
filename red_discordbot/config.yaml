@@ -1,9 +1,10 @@
 name: Red Discord Bot
-version: "1.0.0"
+version: "1.1.0"
 slug: red_discordbot
 description: >-
   Red-DiscordBot (Red) for Discord, using the phasecorex/red-discordbot Docker image.
-  Configure token and prefix in the options below. Data persists in the add-on data folder.
+  Host network is enabled so RPC tools on your Home Assistant machine can reach Red.
+  Share and add-on config folders are mounted for custom cog paths. Configure token and prefix below.
 url: https://github.com/AtticusG3/redBot-hass
 arch:
   - aarch64
@@ -12,6 +13,13 @@ startup: application
 boot: auto
 audio: true
 init: true
+host_network: true
+map:
+  - type: share
+    read_only: false
+  - type: addon_config
+    read_only: false
+    path: /addon_config
 options:
   prefix: "."
   timezone: UTC

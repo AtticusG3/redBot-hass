@@ -4,7 +4,7 @@ This repository provides a [Home Assistant](https://www.home-assistant.io/) add-
 
 ## Add-on: Red Discord Bot
 
-Wraps `phasecorex/red-discordbot` so you can configure the bot from the Supervisor UI. Bot data persists in the add-on's `/data` volume.
+Wraps `phasecorex/red-discordbot` so you can configure the bot from the Supervisor UI. Bot data persists in the add-on's `/data` volume. **Host network** is enabled for **RPC** on the Home Assistant machine; **Share** and **add-on config** are mounted for **custom cog paths** (see add-on documentation).
 
 ## Installation
 
