@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+- Default **extra_args** to **`--rpc`** so RPC is on without manual configuration (existing installs: add `--rpc` in options if you still have an empty value saved).
+- Document loading the **Audio** cog with **`[p]load audio`** (bundled support in `latest` does not auto-load the cog).
+
 ## 1.2.0
 
 - Install **socat** in the add-on image.

@@ -1,5 +1,5 @@
 name: Red Discord Bot
-version: "1.2.0"
+version: "1.2.1"
 slug: red_discordbot
 description: >-
   Red-DiscordBot (Red) for Discord, using the phasecorex/red-discordbot Docker image.
@@ -27,6 +27,7 @@ options:
   rpc_bridge_enabled: false
   rpc_bridge_port: 6134
   rpc_target_port: 6133
+  extra_args: "--rpc"
 schema:
   token: "password?"
   prefix: str

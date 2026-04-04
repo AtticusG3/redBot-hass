@@ -9,33 +9,33 @@ This add-on runs [Red-DiscordBot](https://github.com/Cog-Creators/Red-DiscordBot
 
 ## RPC (dashboards, scripts, and "Red Discord RPC" integration)
 
-Red's RPC WebSocket listens on **`127.0.0.1` only** (you cannot change the bind address in Red for security reasons). That has two consequences:
+**RPC is enabled by default:** **extra_args** defaults to **`--rpc`**. If your integration cannot connect, the usual cause is RPC not running because **`--rpc` was removed** from **extra_args** (or an older add-on install never picked up the default). Add **`--rpc`** back, or combine flags with spaces, for example **`--rpc --debug`**.
 
-1. **Do not use your LAN IP** (for example `192.168.1.x`) in any RPC client. Nothing is listening on that address, so the connection will fail. Your integration error that mentions the LAN IP is expected until you fix the host below.
+Red's RPC WebSocket listens on **`127.0.0.1` only** (bind address is not configurable). Do not point clients at your **LAN IP** (`192.168.x.x`) unless you use a documented proxy; nothing listens there for RPC.
 
-2. **Home Assistant Core usually runs in its own container** (for example on Home Assistant OS). Inside that container, **`127.0.0.1` is Core itself**, not the host where this add-on runs. So **`127.0.0.1` often does not work** for the **Red Discord RPC** custom integration on HA OS even though the add-on uses host network.
+**Home Assistant Core** often runs in **another container** (for example on Home Assistant OS). There, **`127.0.0.1` is Core itself**, not the host where this add-on runs, so some setups need the **RPC bridge** below.
 
-This add-on sets **`host_network: true`** so Red attaches to the **supervisor host** network. You still need a path from **Core** to **host loopback RPC**.
+This add-on uses **`host_network: true`** so Red uses the **supervisor host** network.
 
-### Option A: Try `127.0.0.1` (limited setups)
+### Option A: `127.0.0.1` or `host.docker.internal`
 
-If your Home Assistant Core truly runs on the same network namespace as the host (uncommon), set the integration **RPC host** to **`127.0.0.1`** and the **RPC port** to Red's port (default **6133**). Some Docker Desktop setups work with **`host.docker.internal`** instead; follow your integration's documentation.
+If Core can reach the host loopback (depends on your install), set the integration **host** to **`127.0.0.1`** and **port** to Red's RPC port (default **6133**), or follow your integration's note about **`host.docker.internal`**.
 
-### Option B: RPC bridge (recommended on Home Assistant OS)
+### Option B: RPC bridge (Home Assistant OS and similar)
 
-1. In Red, enable RPC (for example add **`--rpc`** to **extra_args** in this add-on if you have not already enabled RPC in the instance config).
-2. In this add-on's options, enable **`rpc_bridge_enabled`**. Defaults: listen on host **`6134`**, forward to **`127.0.0.1:6133`** (Red's default RPC port). Change **rpc_target_port** if you set a custom RPC port in Red.
-3. In the **Red Discord RPC** integration, set the host to the address Home Assistant Core uses to reach the **supervisor host**. On many HA OS installs this is **`172.30.32.1`**. Set the **port** to **`rpc_bridge_port`** (default **6134**), not 6133, because Core is connecting to the bridge, not to Red directly.
+1. Keep **`--rpc`** in **extra_args** (default).
+2. Enable **`rpc_bridge_enabled`**. Defaults: host **`6134`** forward to **`127.0.0.1:6133`**. Adjust **rpc_target_port** if you changed Red's RPC port.
+3. In the integration, use host **`172.30.32.1`** (common on HA OS) and port **`6134`** (bridge port), not 6133, when the bridge is on.
 
-If **`172.30.32.1` does not work**, check your environment (VLANs, different Supervisor versions). The community often documents the current "host from Core" address for add-ons; your integration may also list alternatives.
+**Security:** The bridge listens on all interfaces on that port. Use a **strong RPC password** in Red. Disable the bridge when you do not need it.
 
-**Security:** The bridge listens on **all interfaces** on the chosen host port while enabled. Anyone who can reach that port on your LAN could try to talk to Red RPC. Use a **strong RPC password** in Red, keep the integration updated, and disable the bridge when you do not need it.
+More flags: see [Red-DiscordBot documentation](https://docs.discord.red/) (`--rpc-port`, etc.).
 
-### Enable RPC in Red
+**Security:** Host networking gives the add-on the host's network view. Only enable tools you trust, keep Red and your RPC password updated, and do not expose RPC to the internet.
 
-See [Red-DiscordBot documentation](https://docs.discord.red/) for RPC (`--rpc`, `--rpc-port`, etc.). You can pass flags via this add-on's **extra_args** option if needed.
+## Audio cog
 
-**Security:** Host networking gives the add-on the same network view as the host. Only enable tools you trust, keep Red and your RPC password updated, and do not expose RPC to the internet.
+The **`latest`** image includes **Java** so the **Audio** cog can run, but Red does **not** load Audio automatically. After the bot is online, run **`[p]load audio`** once (prefix may differ). Red will remember loaded cogs for future restarts. If Audio fails, confirm you use an **audio**-capable image tag and that **audio** is enabled for this add-on in Supervisor (PulseAudio mapping). If playback stutters, see the [upstream image README](https://github.com/PhasecoreX/docker-red-discordbot/blob/master/README.md) for niceness and networking tips.
 
 ## Installing cogs
 
@@ -78,7 +78,7 @@ If a cog needs **system packages** (apt libraries) that are not in the default i
 | timezone | `TZ` | Timezone (e.g. `America/Detroit`). Default `UTC`. |
 | puid / pgid | `PUID` / `PGID` | User/group IDs for files under `/data`. Default `1000`. |
 | owner | `OWNER` | Discord user ID for bot owner (optional; can be set once then removed from options). |
-| extra_args | `EXTRA_ARGS` | Extra arguments passed to Red on startup (e.g. `--debug`). See [Red docs](https://docs.discord.red/). |
+| extra_args | `EXTRA_ARGS` | Defaults to **`--rpc`** so RPC integrations can connect. Add more flags separated by spaces (e.g. **`--rpc --debug`**). Clear only if you intentionally disable RPC startup flags. See [Red docs](https://docs.discord.red/). |
 | redbot_version | `REDBOT_VERSION` | Pip-style version pin (e.g. `==3.5.0`). Leave empty for latest on each restart. |
 | niceness | `NICENESS` | Process nice value (-20 to 19). Values below the default may require extra privileges on the host; see upstream README. |
 | rpc_bridge_enabled | (entrypoint) | If true, runs **socat** on the host: accepts TCP on **rpc_bridge_port** and forwards to **127.0.0.1:rpc_target_port** so HA Core can reach Red RPC. See RPC section. |
@@ -98,10 +98,6 @@ All bot data lives in the add-on **data** directory (`/data` in the container). 
 ## Advanced: image tag (build-time)
 
 The default upstream image tag is `latest`. To use another tag (e.g. `core`, `extra-audio`, `extra-pylav`), rebuild the add-on locally with a Docker build argument `PCX_TAG` only if your workflow supports it, or fork this repository and change the default `ARG PCX_TAG` in `Dockerfile`. See the [upstream README](https://github.com/PhasecoreX/docker-red-discordbot/blob/master/README.md) for tag meanings.
-
-## Audio cog
-
-`audio: true` is set so Supervisor can map audio devices where supported. If audio stutters, the upstream image suggests host networking (already enabled here) or adjusting niceness; see their documentation.
 
 ## Support
 
