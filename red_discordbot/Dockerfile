@@ -1,6 +1,11 @@
 ARG PCX_TAG=latest
 FROM phasecorex/red-discordbot:${PCX_TAG}
 
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends socat \
+    && rm -rf /var/lib/apt/lists/*
+
 ARG BUILD_VERSION=dev
 ARG BUILD_ARCH=amd64
 

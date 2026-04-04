@@ -7,11 +7,33 @@ This add-on runs [Red-DiscordBot](https://github.com/Cog-Creators/Red-DiscordBot
 1. Create a Discord application and bot, and copy the bot **token** (see [Discord developer docs](https://discord.com/developers/docs/intro)).
 2. Install this add-on from the store and **Start** it after setting at least **token** and **prefix** on first run.
 
-## RPC (dashboards and local tools)
+## RPC (dashboards, scripts, and "Red Discord RPC" integration)
 
-Red exposes RPC on **localhost** inside the container. Tools running on the same machine (for example a dashboard or script on your Home Assistant host) cannot reach that address unless the container uses the **host network**.
+Red's RPC WebSocket listens on **`127.0.0.1` only** (you cannot change the bind address in Red for security reasons). That has two consequences:
 
-This add-on sets **`host_network: true`** so RPC clients can connect to **`127.0.0.1` on the Home Assistant machine** using the port Red is configured to use. Enable and configure RPC in Red (see [Red-DiscordBot documentation](https://docs.discord.red/) and search for RPC in the docs for your Red version).
+1. **Do not use your LAN IP** (for example `192.168.1.x`) in any RPC client. Nothing is listening on that address, so the connection will fail. Your integration error that mentions the LAN IP is expected until you fix the host below.
+
+2. **Home Assistant Core usually runs in its own container** (for example on Home Assistant OS). Inside that container, **`127.0.0.1` is Core itself**, not the host where this add-on runs. So **`127.0.0.1` often does not work** for the **Red Discord RPC** custom integration on HA OS even though the add-on uses host network.
+
+This add-on sets **`host_network: true`** so Red attaches to the **supervisor host** network. You still need a path from **Core** to **host loopback RPC**.
+
+### Option A: Try `127.0.0.1` (limited setups)
+
+If your Home Assistant Core truly runs on the same network namespace as the host (uncommon), set the integration **RPC host** to **`127.0.0.1`** and the **RPC port** to Red's port (default **6133**). Some Docker Desktop setups work with **`host.docker.internal`** instead; follow your integration's documentation.
+
+### Option B: RPC bridge (recommended on Home Assistant OS)
+
+1. In Red, enable RPC (for example add **`--rpc`** to **extra_args** in this add-on if you have not already enabled RPC in the instance config).
+2. In this add-on's options, enable **`rpc_bridge_enabled`**. Defaults: listen on host **`6134`**, forward to **`127.0.0.1:6133`** (Red's default RPC port). Change **rpc_target_port** if you set a custom RPC port in Red.
+3. In the **Red Discord RPC** integration, set the host to the address Home Assistant Core uses to reach the **supervisor host**. On many HA OS installs this is **`172.30.32.1`**. Set the **port** to **`rpc_bridge_port`** (default **6134**), not 6133, because Core is connecting to the bridge, not to Red directly.
+
+If **`172.30.32.1` does not work**, check your environment (VLANs, different Supervisor versions). The community often documents the current "host from Core" address for add-ons; your integration may also list alternatives.
+
+**Security:** The bridge listens on **all interfaces** on the chosen host port while enabled. Anyone who can reach that port on your LAN could try to talk to Red RPC. Use a **strong RPC password** in Red, keep the integration updated, and disable the bridge when you do not need it.
+
+### Enable RPC in Red
+
+See [Red-DiscordBot documentation](https://docs.discord.red/) for RPC (`--rpc`, `--rpc-port`, etc.). You can pass flags via this add-on's **extra_args** option if needed.
 
 **Security:** Host networking gives the add-on the same network view as the host. Only enable tools you trust, keep Red and your RPC password updated, and do not expose RPC to the internet.
 
@@ -59,6 +81,9 @@ If a cog needs **system packages** (apt libraries) that are not in the default i
 | extra_args | `EXTRA_ARGS` | Extra arguments passed to Red on startup (e.g. `--debug`). See [Red docs](https://docs.discord.red/). |
 | redbot_version | `REDBOT_VERSION` | Pip-style version pin (e.g. `==3.5.0`). Leave empty for latest on each restart. |
 | niceness | `NICENESS` | Process nice value (-20 to 19). Values below the default may require extra privileges on the host; see upstream README. |
+| rpc_bridge_enabled | (entrypoint) | If true, runs **socat** on the host: accepts TCP on **rpc_bridge_port** and forwards to **127.0.0.1:rpc_target_port** so HA Core can reach Red RPC. See RPC section. |
+| rpc_bridge_port | (entrypoint) | Host port for the bridge (default **6134**). Use this port in the **Red Discord RPC** integration when the bridge is enabled. |
+| rpc_target_port | (entrypoint) | Red RPC port on loopback (default **6133**). Match Red's `--rpc-port` if you changed it. |
 
 ## Data and backups
 

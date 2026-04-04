@@ -1,10 +1,9 @@
 name: Red Discord Bot
-version: "1.1.0"
+version: "1.2.0"
 slug: red_discordbot
 description: >-
   Red-DiscordBot (Red) for Discord, using the phasecorex/red-discordbot Docker image.
-  Host network is enabled so RPC tools on your Home Assistant machine can reach Red.
-  Share and add-on config folders are mounted for custom cog paths. Configure token and prefix below.
+  Host network for RPC; optional RPC bridge for HA Core. Share and add-on config mounted for cogs.
 url: https://github.com/AtticusG3/redBot-hass
 arch:
   - aarch64
@@ -25,6 +24,9 @@ options:
   timezone: UTC
   puid: 1000
   pgid: 1000
+  rpc_bridge_enabled: false
+  rpc_bridge_port: 6134
+  rpc_target_port: 6133
 schema:
   token: "password?"
   prefix: str
@@ -39,3 +41,6 @@ schema:
   extra_args: "str?"
   redbot_version: "str?"
   niceness: "int?"
+  rpc_bridge_enabled: bool
+  rpc_bridge_port: port
+  rpc_target_port: port
