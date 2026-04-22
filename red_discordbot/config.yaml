@@ -1,5 +1,5 @@
 name: Red Discord Bot
-version: "1.2.1"
+version: "1.3.0"
 slug: red_discordbot
 description: >-
   Red-DiscordBot (Red) for Discord, using the phasecorex/red-discordbot Docker image.
@@ -24,6 +24,11 @@ options:
   timezone: UTC
   puid: 1000
   pgid: 1000
+  cog_auto_sync: true
+  cog_auto_load: true
+  cog_repo_url: "https://github.com/AtticusG3/redbot-media-player-cog.git"
+  cog_ref: "main"
+  cog_install_path: "/share/redbot_cogs/ha_red_rpc"
   rpc_bridge_enabled: false
   rpc_bridge_port: 6134
   rpc_target_port: 6133
@@ -42,6 +47,11 @@ schema:
   extra_args: "str?"
   redbot_version: "str?"
   niceness: "int?"
+  cog_auto_sync: bool
+  cog_auto_load: bool
+  cog_repo_url: "str?"
+  cog_ref: "str?"
+  cog_install_path: "str?"
   rpc_bridge_enabled: bool
   rpc_bridge_port: port
   rpc_target_port: port

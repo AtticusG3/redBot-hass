@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+- Bundle `ha_red_rpc` with the add-on image and seed it to `/share/redbot_cogs/ha_red_rpc`.
+- Add startup cog sync options (`cog_auto_sync`, `cog_repo_url`, `cog_ref`, `cog_install_path`) with fallback to bundled snapshot when sync fails.
+- Add best-effort cog auto-load option (`cog_auto_load`) so new installs can come up ready with minimal manual steps.
+
 ## 1.2.1
 
 - Default **extra_args** to **`--rpc`** so RPC is on without manual configuration (existing installs: add `--rpc` in options if you still have an empty value saved).
@@ -8,7 +14,7 @@
 ## 1.2.0
 
 - Install **socat** in the add-on image.
-- Add optional **RPC bridge** (`rpc_bridge_enabled`, `rpc_bridge_port`, `rpc_target_port`) so Home Assistant Core (e.g. Red Discord RPC integration) can reach Red when `127.0.0.1` is wrong inside Core's container.
+- Add optional **RPC bridge** (`rpc_bridge_enabled`, `rpc_bridge_port`, `rpc_target_port`) so Home Assistant Core (e.g. RedBot Media Player integration) can reach Red when `127.0.0.1` is wrong inside Core's container.
 - Document LAN IP vs loopback and typical HA OS host **172.30.32.1** for integrations.
 
 ## 1.1.0

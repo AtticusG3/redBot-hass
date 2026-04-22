@@ -7,7 +7,7 @@ This add-on runs [Red-DiscordBot](https://github.com/Cog-Creators/Red-DiscordBot
 1. Create a Discord application and bot, and copy the bot **token** (see [Discord developer docs](https://discord.com/developers/docs/intro)).
 2. Install this add-on from the store and **Start** it after setting at least **token** and **prefix** on first run.
 
-## RPC (dashboards, scripts, and "Red Discord RPC" integration)
+## RPC (dashboards, scripts, and "RedBot Media Player" integration)
 
 **RPC is enabled by default:** **extra_args** defaults to **`--rpc`**. If your integration cannot connect, the usual cause is RPC not running because **`--rpc` was removed** from **extra_args** (or an older add-on install never picked up the default). Add **`--rpc`** back, or combine flags with spaces, for example **`--rpc --debug`**.
 
@@ -39,6 +39,16 @@ The **`latest`** image includes **Java** so the **Audio** cog can run, but Red d
 
 ## Installing cogs
 
+### Bundled + auto-sync default (RedBot Media Player)
+
+By default, this add-on now ships a bundled `ha_red_rpc` cog snapshot and places it in `/share/redbot_cogs/ha_red_rpc` on startup.
+
+- `cog_auto_sync: true` (default) attempts a `git` sync from `cog_repo_url` and `cog_ref`.
+- If sync fails (offline, GitHub down, bad ref), the add-on keeps using the bundled snapshot.
+- `cog_auto_load: true` (default) attempts a best-effort one-time load bootstrap. If runtime auto-load is unavailable in your Red image, run:
+  - `[p]addpath /share/redbot_cogs`
+  - `[p]load ha_red_rpc`
+
 ### From Discord (typical)
 
 Use Red as usual in your server, for example:
@@ -52,10 +62,8 @@ You need a working internet connection from Home Assistant for downloads from Gi
 
 This add-on mounts:
 
-| Mount inside the container | What it is on Home Assistant |
-|----------------------------|------------------------------|
-| `/share` | Your **config/share** folder (same as **Settings > System > Storage** and Samba "share") |
-| `/addon_config` | **Add-on configs** area for this repository (path shown in Supervisor; often used with Studio / File editor / SFTP) |
+- `/share`: your **config/share** folder (same as **Settings > System > Storage** and Samba "share").
+- `/addon_config`: **add-on configs** area for this repository (path shown in Supervisor; often used with Studio / File editor / SFTP).
 
 Put a cog repo or folder on the host, then in Discord tell Red to use that path, for example:
 
@@ -71,7 +79,7 @@ If a cog needs **system packages** (apt libraries) that are not in the default i
 ## Configuration
 
 | Option | Maps to | Description |
-|--------|---------|-------------|
+| --- | --- | --- |
 | token | `TOKEN` | Discord bot token. Optional after Red has saved it to disk; you can clear it from the UI later for slightly faster startup (see upstream image docs). |
 | prefix | `PREFIX` | Command prefix (e.g. `.`). |
 | prefix2 - prefix5 | `PREFIX2` - `PREFIX5` | Extra prefixes (optional). |
@@ -81,8 +89,13 @@ If a cog needs **system packages** (apt libraries) that are not in the default i
 | extra_args | `EXTRA_ARGS` | Defaults to **`--rpc`** so RPC integrations can connect. Add more flags separated by spaces (e.g. **`--rpc --debug`**). Clear only if you intentionally disable RPC startup flags. See [Red docs](https://docs.discord.red/). |
 | redbot_version | `REDBOT_VERSION` | Pip-style version pin (e.g. `==3.5.0`). Leave empty for latest on each restart. |
 | niceness | `NICENESS` | Process nice value (-20 to 19). Values below the default may require extra privileges on the host; see upstream README. |
+| cog_auto_sync | (entrypoint) | If true, update `ha_red_rpc` from `cog_repo_url` at startup. Falls back to bundled snapshot on failures. |
+| cog_auto_load | (entrypoint) | If true, attempt best-effort auto-load bootstrap for `ha_red_rpc` after startup. |
+| cog_repo_url | (entrypoint) | Git repository used for syncing `ha_red_rpc`. Default `https://github.com/AtticusG3/redbot-media-player-cog.git`. |
+| cog_ref | (entrypoint) | Branch or tag to sync from `cog_repo_url` (default `main`). |
+| cog_install_path | (entrypoint) | Target path for local cog files (default `/share/redbot_cogs/ha_red_rpc`). |
 | rpc_bridge_enabled | (entrypoint) | If true, runs **socat** on the host: accepts TCP on **rpc_bridge_port** and forwards to **127.0.0.1:rpc_target_port** so HA Core can reach Red RPC. See RPC section. |
-| rpc_bridge_port | (entrypoint) | Host port for the bridge (default **6134**). Use this port in the **Red Discord RPC** integration when the bridge is enabled. |
+| rpc_bridge_port | (entrypoint) | Host port for the bridge (default **6134**). Use this port in the **RedBot Media Player** integration when the bridge is enabled. |
 | rpc_target_port | (entrypoint) | Red RPC port on loopback (default **6133**). Match Red's `--rpc-port` if you changed it. |
 
 ## Data and backups
