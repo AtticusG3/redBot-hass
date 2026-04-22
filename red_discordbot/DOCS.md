@@ -2,6 +2,12 @@
 
 This add-on runs [Red-DiscordBot](https://github.com/Cog-Creators/Red-DiscordBot) inside Home Assistant using the [phasecorex/red-discordbot](https://hub.docker.com/r/phasecorex/red-discordbot) image (default tag: `latest`, which includes Java for the **Audio** cog).
 
+Related repositories:
+
+- Add-on packaging (this repository): [AtticusG3/redBot-hass](https://github.com/AtticusG3/redBot-hass)
+- RedBot Media Player cog: [AtticusG3/redbot-media-player-cog](https://github.com/AtticusG3/redbot-media-player-cog)
+- RedBot Media Player Home Assistant integration: [AtticusG3/redbot-media-player-homeassistant](https://github.com/AtticusG3/redbot-media-player-homeassistant)
+
 ## Before you start
 
 1. Create a Discord application and bot, and copy the bot **token** (see [Discord developer docs](https://discord.com/developers/docs/intro)).
@@ -41,13 +47,26 @@ The **`latest`** image includes **Java** so the **Audio** cog can run, but Red d
 
 ### Bundled + auto-sync default (RedBot Media Player)
 
-By default, this add-on now ships a bundled `ha_red_rpc` cog snapshot and places it in `/share/redbot_cogs/ha_red_rpc` on startup.
+By default, this add-on ships a bundled `ha_red_rpc` cog snapshot and places it in `/share/redbot_cogs/ha_red_rpc` on startup.
 
 - `cog_auto_sync: true` (default) attempts a `git` sync from `cog_repo_url` and `cog_ref`.
 - If sync fails (offline, GitHub down, bad ref), the add-on keeps using the bundled snapshot.
-- `cog_auto_load: true` (default) attempts a best-effort one-time load bootstrap. If runtime auto-load is unavailable in your Red image, run:
+- `cog_auto_load: true` (default) attempts a best-effort one-time load bootstrap.
+- `cog_install_path` (default `/share/redbot_cogs/ha_red_rpc`) is where the cog is installed and synced.
+- Default sync source:
+  - `cog_repo_url: https://github.com/AtticusG3/redbot-media-player-cog.git`
+  - `cog_ref: main`
+- If runtime auto-load is unavailable in your Red image, run:
   - `[p]addpath /share/redbot_cogs`
   - `[p]load ha_red_rpc`
+
+First run for most operators:
+
+- Start the add-on with `token`, `prefix`, and default `extra_args` (`--rpc`).
+- In Discord, run `[p]load audio` once.
+- If `ha_red_rpc` did not auto-load, run the fallback commands above.
+
+For concise release notes tied to these options, see [CHANGELOG.md](CHANGELOG.md).
 
 ### From Discord (typical)
 
@@ -89,11 +108,11 @@ If a cog needs **system packages** (apt libraries) that are not in the default i
 | extra_args | `EXTRA_ARGS` | Defaults to **`--rpc`** so RPC integrations can connect. Add more flags separated by spaces (e.g. **`--rpc --debug`**). Clear only if you intentionally disable RPC startup flags. See [Red docs](https://docs.discord.red/). |
 | redbot_version | `REDBOT_VERSION` | Pip-style version pin (e.g. `==3.5.0`). Leave empty for latest on each restart. |
 | niceness | `NICENESS` | Process nice value (-20 to 19). Values below the default may require extra privileges on the host; see upstream README. |
-| cog_auto_sync | (entrypoint) | If true, update `ha_red_rpc` from `cog_repo_url` at startup. Falls back to bundled snapshot on failures. |
-| cog_auto_load | (entrypoint) | If true, attempt best-effort auto-load bootstrap for `ha_red_rpc` after startup. |
-| cog_repo_url | (entrypoint) | Git repository used for syncing `ha_red_rpc`. Default `https://github.com/AtticusG3/redbot-media-player-cog.git`. |
-| cog_ref | (entrypoint) | Branch or tag to sync from `cog_repo_url` (default `main`). |
-| cog_install_path | (entrypoint) | Target path for local cog files (default `/share/redbot_cogs/ha_red_rpc`). |
+| cog_auto_sync | (entrypoint) | If true, update `ha_red_rpc` from `cog_repo_url` at startup. On sync failure, keep and use the bundled snapshot so startup remains reliable. |
+| cog_auto_load | (entrypoint) | If true, attempt best-effort auto-load bootstrap for `ha_red_rpc` after startup. If runtime support is missing, run fallback commands from the Installing cogs section. |
+| cog_repo_url | (entrypoint) | Git repository used for syncing `ha_red_rpc` for RedBot Media Player. Default `https://github.com/AtticusG3/redbot-media-player-cog.git`. |
+| cog_ref | (entrypoint) | Branch or tag to sync from `cog_repo_url` (default `main`). Pin to a tag or commit for stricter change control. |
+| cog_install_path | (entrypoint) | Target path for local cog files (default `/share/redbot_cogs/ha_red_rpc`). Keep parent path aligned with your `[p]addpath` value. |
 | rpc_bridge_enabled | (entrypoint) | If true, runs **socat** on the host: accepts TCP on **rpc_bridge_port** and forwards to **127.0.0.1:rpc_target_port** so HA Core can reach Red RPC. See RPC section. |
 | rpc_bridge_port | (entrypoint) | Host port for the bridge (default **6134**). Use this port in the **RedBot Media Player** integration when the bridge is enabled. |
 | rpc_target_port | (entrypoint) | Red RPC port on loopback (default **6133**). Match Red's `--rpc-port` if you changed it. |
@@ -106,7 +125,7 @@ All bot data lives in the add-on **data** directory (`/data` in the container). 
 
 - Treat the **token** like a password. Do not paste it into logs or community posts.
 - **extra_args** such as `--debug` can increase log verbosity; avoid sharing logs that might contain sensitive data.
-- **Host network** is required for local RPC; treat RPC credentials like admin access (see RPC section above).
+- **Host network** is required for local RPC; treat RPC credentials like admin access and avoid exposing bridge/RPC ports outside trusted networks.
 
 ## Advanced: image tag (build-time)
 

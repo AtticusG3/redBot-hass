@@ -4,7 +4,22 @@ This repository provides a [Home Assistant](https://www.home-assistant.io/) add-
 
 ## Add-on: Red Discord Bot
 
-Wraps `phasecorex/red-discordbot` so you can configure the bot from the Supervisor UI. Bot data persists in the add-on's `/data` volume. **extra_args** defaults to **`--rpc`**. **Host network** is enabled for RPC; optional **RPC bridge** helps HA Core reach the bot on some installs. **Share** and **add-on config** are mounted for custom cog paths. The add-on now bundles and can auto-sync `ha_red_rpc` for **RedBot Media Player** by default. Load the **Audio** cog in Discord with **`[p]load audio`** once (see add-on documentation).
+Wraps `phasecorex/red-discordbot` so you can configure the bot from the Supervisor UI. Bot data persists in the add-on's `/data` volume. **extra_args** defaults to **`--rpc`**. **Host network** is enabled for RPC; optional **RPC bridge** helps HA Core reach the bot on some installs. **Share** and **add-on config** are mounted for custom cog paths.
+
+For **RedBot Media Player**, the add-on bundles `ha_red_rpc` and can auto-manage it at startup:
+
+- `cog_auto_sync` (default `true`) syncs from `cog_repo_url` at `cog_ref`.
+- If sync fails, the bundled snapshot is kept as a reliability fallback.
+- `cog_auto_load` (default `true`) attempts one-time runtime loading; if unavailable in your Red image, run:
+  - `[p]addpath /share/redbot_cogs`
+  - `[p]load ha_red_rpc`
+
+Load the **Audio** cog once with **`[p]load audio`** (see add-on documentation).
+
+Related RedBot Media Player repositories:
+
+- Cog source: [AtticusG3/redbot-media-player-cog](https://github.com/AtticusG3/redbot-media-player-cog)
+- Home Assistant integration: [AtticusG3/redbot-media-player-homeassistant](https://github.com/AtticusG3/redbot-media-player-homeassistant)
 
 ## Installation
 
@@ -18,6 +33,7 @@ Wraps `phasecorex/red-discordbot` so you can configure the bot from the Supervis
 5. Click **Add** and close the repositories dialog.
 6. Refresh the store page, find **Red Discord Bot**, and install it.
 7. Configure your Discord bot **token** and **prefix** (see the add-on **Documentation** tab), then **Start** the add-on.
+8. For first-run Discord commands (Audio and `ha_red_rpc` fallback commands), follow `red_discordbot/DOCS.md`.
 
 ### One-click repository link (optional)
 
@@ -29,7 +45,8 @@ After you know your public Git URL, you can generate an "Add repository" button 
 
 ## Documentation
 
-See [red_discordbot/DOCS.md](red_discordbot/DOCS.md) for configuration, backups, and advanced options.
+See [red_discordbot/DOCS.md](red_discordbot/DOCS.md) for configuration, RPC details, bundled+auto-sync behavior, and fallback commands.  
+See [red_discordbot/CHANGELOG.md](red_discordbot/CHANGELOG.md) for release history.
 
 ## License
 
