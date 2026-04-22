@@ -13,3 +13,6 @@ venv/
 .history/
 *.code-workspace
 .cursor/
+
+__pycache__/
+*.pyc
