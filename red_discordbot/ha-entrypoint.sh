@@ -10,8 +10,7 @@ export_if_set() {
   local val
   val=$(jq -r ".${json_key} // empty" "$OPTIONS" 2>/dev/null || true)
   if [[ -n "$val" ]]; then
-    printf -v "${env_name}" '%s' "$val"
-    export "${env_name}"
+    export "${env_name}=${val}"
   fi
 }
 
@@ -29,7 +28,13 @@ json_or_default() {
 
 dir_has_entries() {
   local dir_path=$1
-  [[ -e "$dir_path"/?* || -e "$dir_path"/.[!.]* || -e "$dir_path"/..?* ]]
+  local entry
+  for entry in "$dir_path"/* "$dir_path"/.[!.]* "$dir_path"/..?*; do
+    if [[ -e "$entry" ]]; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 seed_bundled_cog() {
