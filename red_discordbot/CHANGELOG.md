@@ -1,28 +1,15 @@
 # Changelog
 
-## 1.3.0
-
-- Bundle `ha_red_rpc` with the add-on image and seed it to `/share/redbot_cogs/ha_red_rpc`.
-- Add startup cog sync options (`cog_auto_sync`, `cog_repo_url`, `cog_ref`, `cog_install_path`) with fallback to bundled snapshot when sync fails.
-- Add best-effort cog auto-load option (`cog_auto_load`) so new installs can come up ready with minimal manual steps.
-
-## 1.2.1
-
-- Default **extra_args** to **`--rpc`** so RPC is on without manual configuration (existing installs: add `--rpc` in options if you still have an empty value saved).
-- Document loading the **Audio** cog with **`[p]load audio`** (bundled support in `latest` does not auto-load the cog).
-
-## 1.2.0
-
-- Install **socat** in the add-on image.
-- Add optional **RPC bridge** (`rpc_bridge_enabled`, `rpc_bridge_port`, `rpc_target_port`) so Home Assistant Core (e.g. RedBot Media Player integration) can reach Red when `127.0.0.1` is wrong inside Core's container.
-- Document LAN IP vs loopback and typical HA OS host **172.30.32.1** for integrations.
-
-## 1.1.0
-
-- Enable host network for local RPC access from the Home Assistant machine.
-- Mount Home Assistant Share at `/share` (read-write) for custom cog paths.
-- Mount add-on config at `/addon_config` (read-write) for custom cog paths without replacing `/config` in the image.
-
 ## 1.0.0
 
-- Initial release: Red-DiscordBot via `phasecorex/red-discordbot`, options mapped from Supervisor UI, persistent `/data`.
+- Bundle `ha_red_rpc` with the add-on image and seed it to `/share/redbot_cogs/ha_red_rpc` for RedBot Media Player.
+- Add startup cog sync options (`cog_auto_sync`, `cog_repo_url`, `cog_ref`, `cog_install_path`) with bundled-snapshot fallback when sync fails (offline, upstream unavailable, or invalid ref).
+- Add best-effort cog auto-load option (`cog_auto_load`) so new installs can come up ready with minimal manual steps; fallback remains:
+  - `[p]addpath /share/redbot_cogs`
+  - `[p]load ha_red_rpc`
+- Set default sync source to `https://github.com/AtticusG3/redbot-media-player-cog.git` at `main` (override with `cog_repo_url` / `cog_ref` if needed).
+
+### Notes
+
+- This repository now treats `1.0.0` as the first public release baseline for the RedBot Media Player channel.
+- Earlier iterations were alpha/internal and are not carried as public semver history.
