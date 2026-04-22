@@ -29,6 +29,7 @@ json_or_default() {
 
 seed_bundled_cog() {
   local target_path=$1
+  local seed_marker="$target_path/.ha_red_rpc_seeded_snapshot"
   if [[ ! -d "$BUNDLED_COG_PATH" ]]; then
     echo "[ha-entrypoint] bundled cog path missing: $BUNDLED_COG_PATH" >&2
     return
@@ -37,6 +38,7 @@ seed_bundled_cog() {
   if [[ ! -f "$target_path/ha_red_rpc.py" ]]; then
     echo "[ha-entrypoint] Seeding bundled ha_red_rpc snapshot to $target_path" >&2
     cp -a "$BUNDLED_COG_PATH/." "$target_path/"
+    : >"$seed_marker"
   fi
 }
 
@@ -44,6 +46,7 @@ sync_cog_repo() {
   local target_path=$1
   local repo_url=$2
   local repo_ref=$3
+  local seed_marker="$target_path/.ha_red_rpc_seeded_snapshot"
   if [[ -z "$repo_url" ]]; then
     echo "[ha-entrypoint] cog_auto_sync enabled but cog_repo_url is empty; skipping" >&2
     return
@@ -51,16 +54,29 @@ sync_cog_repo() {
   mkdir -p "$target_path"
   if [[ -d "$target_path/.git" ]]; then
     echo "[ha-entrypoint] Updating ha_red_rpc from $repo_url@$repo_ref" >&2
+    if git -C "$target_path" remote get-url origin >/dev/null 2>&1; then
+      git -C "$target_path" remote set-url origin "$repo_url" || return
+    else
+      git -C "$target_path" remote add origin "$repo_url" || return
+    fi
     git -C "$target_path" fetch --depth=1 origin "$repo_ref" || return
-    git -C "$target_path" checkout -q FETCH_HEAD || return
+    git -C "$target_path" checkout -q --force FETCH_HEAD || return
     return
   fi
-  if [[ -n "$(ls -A "$target_path" 2>/dev/null)" ]]; then
+  if [[ -n "$(ls -A "$target_path" 2>/dev/null)" && ! -f "$seed_marker" ]]; then
     echo "[ha-entrypoint] Existing non-git cog directory found at $target_path; leaving seeded files in place" >&2
     return
   fi
-  echo "[ha-entrypoint] Cloning ha_red_rpc from $repo_url@$repo_ref into $target_path" >&2
-  git clone --depth=1 --branch "$repo_ref" "$repo_url" "$target_path" || return
+  echo "[ha-entrypoint] Syncing ha_red_rpc from $repo_url@$repo_ref into $target_path" >&2
+  git -C "$target_path" init -q || return
+  if git -C "$target_path" remote get-url origin >/dev/null 2>&1; then
+    git -C "$target_path" remote set-url origin "$repo_url" || return
+  else
+    git -C "$target_path" remote add origin "$repo_url" || return
+  fi
+  git -C "$target_path" fetch --depth=1 origin "$repo_ref" || return
+  git -C "$target_path" checkout -q --force FETCH_HEAD || return
+  rm -f "$seed_marker"
 }
 
 attempt_auto_load() {

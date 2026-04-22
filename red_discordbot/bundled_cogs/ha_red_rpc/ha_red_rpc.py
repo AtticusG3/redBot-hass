@@ -661,6 +661,10 @@ class HARedRPC(commands.Cog):
         if audio is None:
             return {"ok": False, "error": "audio_cog_not_loaded", "playlists": []}
 
+        member = guild.get_member(actor_user_id)
+        if member is None:
+            member = guild.owner or guild.me
+
         playlists: list[dict[str, str]] = []
         seen: set[str] = set()
 
