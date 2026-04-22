@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.2
+
+- Fix startup sync flow for `ha_red_rpc` so first boot can sync even after bundled snapshot seeding.
+- Support pinning `cog_ref` to commit SHAs by switching initial sync to `git init` + `fetch` + `checkout FETCH_HEAD`.
+- Respect configured `cog_repo_url` when updating existing local git checkouts.
+- Fix playlist fallback argument handling in bundled `ha_red_rpc` to avoid undefined `member` failures.
+- Harden add-on CI workflow (`actions/checkout@v5`) and align lint policy for current Dockerfile constraints.
+
 ## 1.0.0
 
 - Bundle `ha_red_rpc` with the add-on image and seed it to `/share/redbot_cogs/ha_red_rpc` for RedBot Media Player.
