@@ -27,6 +27,11 @@ json_or_default() {
   echo "$value"
 }
 
+dir_has_entries() {
+  local dir_path=$1
+  [[ -e "$dir_path"/?* || -e "$dir_path"/.[!.]* || -e "$dir_path"/..?* ]]
+}
+
 seed_bundled_cog() {
   local target_path=$1
   local seed_marker="$target_path/.ha_red_rpc_seeded_snapshot"
@@ -63,7 +68,7 @@ sync_cog_repo() {
     git -C "$target_path" checkout -q --force FETCH_HEAD || return
     return
   fi
-  if [[ -n "$(ls -A "$target_path" 2>/dev/null)" && ! -f "$seed_marker" ]]; then
+  if dir_has_entries "$target_path" && [[ ! -f "$seed_marker" ]]; then
     echo "[ha-entrypoint] Existing non-git cog directory found at $target_path; leaving seeded files in place" >&2
     return
   fi
